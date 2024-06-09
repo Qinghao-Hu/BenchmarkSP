@@ -20,7 +20,7 @@ def prepare_seq_parallel_inputs(seq_algo, input_ids, position_ids, target_ids, r
             "local_target_ids": target_ids.to(device),
         }
     elif seq_algo in ["hybrid", "ring", "zigzag", "striped", "ulysses", "lightseq"]:
-        return prepare_inputs(input_ids, position_ids, target_ids, rank, world_size, device)
+        return prepare_inputs(input_ids, position_ids, target_ids, rank, world_size, device, seq_algo)
     else:
         raise ValueError(f"Invalid seq_algo: {seq_algo}")
 
@@ -41,7 +41,7 @@ def apply_seq_parallel_monkey_patch(seq_algo):
         apply_ring_attn_monkey_patch_llama()
     elif seq_algo == "zigzag":
         apply_zigzag_ring_attn_monkey_patch_llama()
-    elif seq_algo == "stripe":
+    elif seq_algo == "striped":
         apply_striped_attn_monkey_patch_llama()
     elif seq_algo == "hybrid":
         apply_hybrid_attn_monkey_patch_llama()

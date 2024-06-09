@@ -126,6 +126,7 @@ def main(args):
     # # with_stack=True # Enable stack tracing, adds extra profiling overhead.
     # ) as profiler:
 
+    print(f"Using {args.parallel_mode}")
     for step, batch in enumerate(train_loader):
         input_ids = batch["input_ids"][..., : args.seq_length + 1][..., :-1]
         target_ids = batch["input_ids"][..., : args.seq_length + 1][..., 1:]

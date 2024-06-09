@@ -85,22 +85,34 @@ def extract_local_round_off(value, rank, world_size, device, dim=1):
 
     return local_value.to(device)
 
+def map_extract_local(sp_alg):
+    fn_map = {"round_off": extract_local_round_off,
+        "striped": extract_local_striped,
+        "zigzag": extract_local_zigzag,
+        "ring": extract_local,
+        "ulysses": extract_local,
+        "hybrid": extract_local, # TODO: hybird should use mixed zigzag
+    }
+    return fn_map[sp_alg]
 
-def prepare_inputs(input_ids, position_ids, target_ids, rank, world_size, device):
-    local_input_ids = extract_local(
+
+def prepare_inputs(input_ids, position_ids, target_ids, rank, world_size, device, parallel_mode):
+    extract_local_fn = map_extract_local(parallel_mode)
+
+    local_input_ids = extract_local_fn(
         input_ids,
         rank,
         world_size,
         device
     )
-    local_position_ids = extract_local(
+    local_position_ids = extract_local_fn(
         position_ids,
         rank,
         world_size,
         device
     )
     if target_ids is not None:
-        local_target_ids = extract_local(
+        local_target_ids = extract_local_fn(
             target_ids,
             rank,
             world_size,

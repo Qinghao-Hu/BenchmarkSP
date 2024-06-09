@@ -5,7 +5,6 @@ import warnings
 import torch
 import torch.utils.checkpoint
 
-# from sequence_parallel.hybrid import HybridAttention, HybridAttentionQKVPacked
 from .attn_layer import HybridAttention
 
 
