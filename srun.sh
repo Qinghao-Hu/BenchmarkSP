@@ -26,6 +26,7 @@ train.py \
 --learning-rate 2e-5  \
 --model meta-llama/Llama-2-7b-hf  \
 --seq-length 64_000 \
+--parallel_mode zigzag
 # --parallel_mode hybrid \
 # --ulysses_degree 8
 # --parallel_mode ulysses
@@ -38,3 +39,5 @@ train.py \
 # --use_ulysses_lowdim
 
 # srun -p llm_s --job-name=vila -n 2 --gres=gpu:8 --ntasks-per-node=1 bash srun.sh
+
+# --error=log/error_log.txt

@@ -7,7 +7,6 @@ import transformers
 from transformers import AutoConfig, AutoModelForCausalLM, set_seed, default_data_collator
 from flash_attn.losses.cross_entropy import CrossEntropyLoss
 from accelerate import Accelerator
-from accelerate.utils import InitProcessGroupKwargs, set_seed
 from accelerate.utils import (
     InitProcessGroupKwargs,
     set_seed,
@@ -51,6 +50,7 @@ def main(args):
         args.model,
         device_map=accelerator.device,
         torch_dtype=torch.bfloat16,
+        rope_theta=100_000,
         _attn_implementation="flash_attention_2",
     )
 
@@ -146,6 +146,7 @@ def main(args):
         local_position_ids = prepared["local_position_ids"]
         local_target_ids = prepared["local_target_ids"]
 
+        accelerator.print(f"Step: {step}")
         loss_log = None
         with accelerator.accumulate(model):
             logits = model(
