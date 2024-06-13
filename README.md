@@ -29,8 +29,8 @@ pip install -r requirements.txt
 > Default: sequence_length_per_gpu=4000, batch_size=1, sequence_parallel_degree=WORLD_SIZE
 >
 > Example for `hybrid` (--ulysses_degree only works for `hybrid`):
-> # --parallel_mode hybrid \
-> # --ulysses_degree 8 \
+> --parallel_mode hybrid \
+> --ulysses_degree 8 \
 
 
 1. Single Node
