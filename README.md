@@ -26,18 +26,20 @@ pip install -r requirements.txt
 >  💡Support parallelism strategies
 > `hybrid`, `ring`, `zigzag`, `striped`, `ulysses`, `lightseq`
 >
-> Default: sequence_length_per_gpu=4000, batch_size=1, sequence_parallel_degree=WORLD_SIZE
+> Default: `sequence_length_per_gpu=4000`,`batch_size=1`, `sequence_parallel_degree=WORLD_SIZE`
 >
 > Example for `hybrid` (--ulysses_degree only works for `hybrid`):
+>
 > --parallel_mode hybrid \
+>
 > --ulysses_degree 8 \
 
 
-1. Single Node
+1. ***Single Node***
 
 > srun -p llm_s --job-name=benchmark -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun_single.sh
 
-2. Multi Node
+2. ***Multi Nodes***
 
 Please modify the `num_machines` in `configs/multi_node.yaml`. Default is 2 nodes (16 GPUs).
 
@@ -105,4 +107,10 @@ pip install -e .
 
 ### b. Run Megatron-LM
 
-```bash
+```shell
+cp ../BenchmarkSP/megatron/* ./
+
+srun -p xxx --job-name=megatron -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun.sh
+```
+
+You can customize `SEQ_LENGTH_PER_GPU`, `context-parallel-size` and other parameters in `srun.sh`.
