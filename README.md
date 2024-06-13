@@ -1,10 +1,38 @@
 <!-- <div align="center"> -->
 
-Megatron-LM & Megatron-Core
-===========================
-<h4>GPU optimized techniques for training transformer models at-scale</h4>
 
-# Setup
+
+## 1. Hybrid, Ulysses, Ring (`sequence_parallel` folder)
+===========================
+
+Use ZeRO-3 + different sequence parallelism strategies.
+
+### a. Setup
+
+
+
+
+
+
+
+## 2. Megatron-LM (`megatron` folder)
+===========================
+
+Use ZeRO-1 + Context-Parallelism.
+
+
+### a. Setup
+
+> [!NOTE]
+> If you get `undefined symbol: ncclCommRegister` error you should install torch 2.1.2 instead: `pip install torch==2.1.2 --index-url https://download.pytorch.org/whl/cu121`
+
+```
+
+
+> [!TIP]
+> We log to wandb automatically if it's installed. For that you can use `pip install wandb`. If you don't want to use wandb, you can run `wandb disabled`.
+
+```
 
 1. NVIDIA [APEX](https://github.com/NVIDIA/apex).
    
