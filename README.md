@@ -96,7 +96,7 @@ export CUDNN_PATH=/mnt/petrelfs/share/cudnn-8.9.6-cuda12/
 pip install .
 ```
 
-3. NVIDIA Megatron-LM
+3. NVIDIA [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)
 
 
 ```bash
