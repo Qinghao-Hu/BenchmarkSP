@@ -6,7 +6,7 @@ train.py \
 --seed 123 \
 --max-train-steps 30  \
 --learning-rate 2e-5  \
---model meta-llama/Llama-2-7b-hf  \
+--model NousResearch/Llama-2-7b-hf  \
 --seq-length 4_000 \
 --parallel_mode zigzag
 

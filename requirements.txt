@@ -2,7 +2,6 @@ accelerate
 datasets
 deepspeed
 einops
-flash_attn==2.5.8
 numpy
 pytest
 torch
@@ -11,3 +10,4 @@ transformers
 triton
 wandb
 xformers
+# flash_attn==2.5.8

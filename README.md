@@ -8,15 +8,45 @@ Use ZeRO-3 + different sequence parallelism strategies.
 
 ### a. Setup
 
+```shell
+conda create -n bench python=3.10 
+conda activate bench
+# this is optional if you prefer to system built-in nvcc.
+conda install -c nvidia cuda-toolkit -y
+
+wget https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.8/flash_attn-2.5.8+cu122torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+pip install flash_attn-2.5.8+cu122torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+pip install -r requirements.txt
+```
+
+### b. Run various parallelism strategies
+
+> [!NOTE]
+>  💡Support parallelism strategies
+> `hybrid`, `ring`, `zigzag`, `striped`, `ulysses`, `lightseq`
+>
+> Default: sequence_length_per_gpu=4000, batch_size=1, sequence_parallel_degree=WORLD_SIZE
+>
+> Example for `hybrid` (--ulysses_degree only works for `hybrid`):
+> # --parallel_mode hybrid \
+> # --ulysses_degree 8 \
 
 
+1. Single Node
 
+> srun -p llm_s --job-name=benchmark -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun_single.sh
 
+2. Multi Node
 
-=================================================================================
+Please modify the `num_machines` in `configs/multi_node.yaml`. Default is 2 nodes (16 GPUs).
+
+> srun -p xxx --job-name=benchmark -n 2 --gres=gpu:8 --ntasks-per-node=1 bash srun.sh
+
+=====================================================================
 ## 2. Megatron-LM (`megatron` folder)
 
-Use ZeRO-1 + Context-Parallelism.
+Use ZeRO-1 + Context-Parallelism (i.e. Zigzag Ring).
 
 
 ### a. Setup
@@ -64,7 +94,7 @@ export CUDNN_PATH=/mnt/petrelfs/share/cudnn-8.9.6-cuda12/
 pip install .
 ```
 
-3. Megatron-LM
+3. NVIDIA Megatron-LM
 
 
 ```bash
@@ -72,3 +102,7 @@ cd Megatron-LM
 
 pip install -e .
 ```
+
+### b. Run Megatron-LM
+
+```bash

@@ -26,6 +26,10 @@ echo "node rank:" $SLURM_PROCID
 ip_addr=$(echo "$master_addr" | sed 's/HOST-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)/\1.\2.\3.\4/')
 echo $ip_addr
 
+SEQ_LENGTH_PER_GPU=4000
+GPUS_PER_NODE=8
+SEQ_LENGTH=$(($n_node*$SEQ_LENGTH_PER_GPU*$GPUS_PER_NODE))
+
 accelerate launch \
 --config_file configs/single_node.yaml \
 --main_process_ip $MASTER_ADDR \
@@ -37,8 +41,8 @@ train.py \
 --seed 123 \
 --max-train-steps 30  \
 --learning-rate 2e-5  \
---model meta-llama/Llama-2-7b-hf  \
---seq-length 32_000 \
+--model NousResearch/Llama-2-7b-hf  \
+--seq-length $SEQ_LENGTH \
 --parallel_mode zigzag
 # --parallel_mode hybrid \
 # --ulysses_degree 8
