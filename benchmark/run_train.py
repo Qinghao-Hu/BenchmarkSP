@@ -191,8 +191,6 @@ if __name__ == "__main__":
     )
     args = args.parse_args()
 
-
-
     initialize_distributed(tensor_model_parallel_size=args.tensor_parallel_size, pipeline_model_parallel_size=args.pipeline_parallel_size, context_model_parallel_size=args.context_parallel_size)
     model_parallel_cuda_manual_seed(args.seed)
 
@@ -207,7 +205,6 @@ if __name__ == "__main__":
     forward_backward_func = get_forward_backward_func()
 
     # Running the model for 5 iterations
-    time
     for step in range(args.max_train_steps):
         optim.zero_grad()
 
