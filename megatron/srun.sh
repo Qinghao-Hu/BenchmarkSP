@@ -16,7 +16,6 @@ echo "node rank:" $SLURM_PROCID
 ip_addr=$(echo "$master_addr" | sed 's/HOST-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)-\([0-9]*\)/\1.\2.\3.\4/')
 echo $ip_addr
 
-
 CHECKPOINT_PATH=./ #<Specify path>
 VOCAB_FILE=./gpt2-vocab.json #<Specify path to file>/gpt2-vocab.json
 MERGE_FILE=./gpt2-merges.txt #<Specify path to file>/gpt2-merges.txt
@@ -52,7 +51,7 @@ GPT_MODEL_ARGS=(
     # --activation-func torch.nn.functional.silu
     # --add-bias-linear False
     # --bias_activation_fusion False,
-    # --gated-linear-unit
+    --normalization RMSNorm
     --untie-embeddings-and-output-weights
     --apply-query-key-layer-scaling
     --seq-length $SEQ_LENGTH
@@ -96,25 +95,36 @@ DATA_ARGS=(
 
 EVAL_AND_LOGGING_ARGS=(
     --log-interval 1
+    --log-throughput
     # --save-interval 10000
     --eval-interval 10000
     --eval-iters 1
+    --profile
 )
 
-torchrun ${DISTRIBUTED_ARGS[@]} pretrain_llama.py \
+
+# NSYS Profile
+LOG_DIR=.
+NSYS_ITER=-1 # -1: off, >0 to enable recommend: 10
+NSYS_ITER_RANGE=2
+
+if (( $NSYS_ITER >= 0 )); then
+    mkdir -p ${LOG_DIR}/nsys_reports
+    NSYS_CMD="/mnt/petrelfs/share/Nsight_Systems/bin/nsys profile --force-overwrite true -o ${LOG_DIR}/nsys_reports/megatron-32GPU-$NODE_RANK --capture-range=cudaProfilerApi"
+    NSYS_ARGS="
+        --profile --profile-step-start $NSYS_ITER --profile-step-end $(($NSYS_ITER + $NSYS_ITER_RANGE))
+    "
+else
+    NSYS_CMD=""
+    NSYS_ARGS=""
+fi
+
+$NSYS_CMD torchrun ${DISTRIBUTED_ARGS[@]} pretrain_llama.py \
 ${GPT_MODEL_ARGS[@]} \
 ${TRAINING_ARGS[@]} \
 ${MODEL_PARALLEL_ARGS[@]} \
 ${DATA_ARGS[@]} \
-${EVAL_AND_LOGGING_ARGS[@]}
+${EVAL_AND_LOGGING_ARGS[@]} \
+${NSYS_ARGS}
 
-# torchrun --nproc-per-node 8 run_train.py \
-# --batch_size 1 \
-# --max_train_steps 30 \
-# --seq_length 4_000 \
-# --tensor_parallel_size 1 \
-# --pipeline_parallel_size 1 \
-# --context_parallel_size 8
-
-
-# # srun -p llm_s --job-name=megatron -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun.sh
+# srun -p llm_s --job-name=megatron -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun.sh

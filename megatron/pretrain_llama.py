@@ -243,5 +243,10 @@ if __name__ == "__main__":
         model_provider,
         ModelType.encoder_or_decoder,
         forward_step,
-        args_defaults={'tokenizer_type': 'GPT2BPETokenizer', 'mock_data': True, 'gated_linear_unit': True},
+        args_defaults={
+            "tokenizer_type": "GPT2BPETokenizer",
+            "mock_data": True,
+            "gated_linear_unit": True,
+            "add_bias_linear": False,
+        },
     )
