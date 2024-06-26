@@ -1,5 +1,16 @@
 <!-- <div align="center"> -->
 
+### Run on Container
+
+```shell
+docker pull tonyhao96/benchmark:v0.1.0
+docker run --name test --shm-size=16g --gpus all --net=host --pid=host -it tonyhao96/benchmark:v0.1.0
+```
+
+```shell
+cd /opt/BenchmarkSP
+
+```
 
 
 ## 1. Hybrid, Ulysses, Ring (`sequence_parallel` folder)

@@ -21,6 +21,8 @@ accelerate launch \
 --config_file configs/multi_node.yaml \
 --main_process_ip $MASTER_ADDR \
 --main_process_port 12345 \
+--num_machines $n_node \
+--num_processes $(($n_node*$GPUS_PER_NODE)) \
 --machine_rank $SLURM_PROCID \
 train.py \
 --batch-size 1 \
