@@ -7,9 +7,20 @@ docker pull tonyhao96/benchmark:v0.1.0
 docker run --name test --shm-size=16g --gpus all --net=host --pid=host -it tonyhao96/benchmark:v0.1.0
 ```
 
++ Hybrid
+
 ```shell
 cd /opt/BenchmarkSP
+git pull
+bash run.sh
+```
 
++ Megatron
+
+```
+cp ./megatron/* /opt/Megatron-LM/
+cd /opt/Megatron-LM/
+bash run.sh
 ```
 
 
