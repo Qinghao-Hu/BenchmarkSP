@@ -20,6 +20,7 @@ bash run.sh
 ```
 cp ./megatron/* /opt/Megatron-LM/
 cd /opt/Megatron-LM/
+conda deactivate
 bash run.sh
 ```
 
