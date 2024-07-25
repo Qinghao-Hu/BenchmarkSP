@@ -22,11 +22,14 @@ class ProcessGroupManager(Singleton):
     sp_degree = sp_ring_degree x sp_ulysses_degree
     """
 
-    def __init__(self, ulysses_degree, ring_degree, dp_degree, use_ulysses_low):
+    def __init__(self, ulysses_degree, ring_degree, dp_degree, use_ulysses_low, ablate_no_comm, ablate_comm):
         if not hasattr(self, "__initialized"):
             super().__init__()
             self.ulysses_degree = ulysses_degree
             self.ulysses_seq_len = None
+
+            self.ablate_no_comm = ablate_no_comm
+            self.ablate_comm = ablate_comm
 
             self.ring_degree = ring_degree
             self.sp_degree = ring_degree * ulysses_degree
@@ -117,7 +120,7 @@ class ProcessGroupManager(Singleton):
 PROCESS_GROUP_MANAGER = None
 
 
-def set_pg_manager(sp_degree, sp_ring_degree=1, use_ulysses_low=True):
+def set_pg_manager(sp_degree, sp_ring_degree=1, use_ulysses_low=True,ablate_no_comm=False, ablate_comm=False):
     """
     Set the process group manager for sequence parallelism.
     sp_degree = sp_ring_degree x sp_ulysses_degree
@@ -154,7 +157,7 @@ def set_pg_manager(sp_degree, sp_ring_degree=1, use_ulysses_low=True):
 
     # Init the process group manager
     global PROCESS_GROUP_MANAGER
-    PROCESS_GROUP_MANAGER = ProcessGroupManager(sp_ulysses_degree, sp_ring_degree, dp_degree, use_ulysses_low)
+    PROCESS_GROUP_MANAGER = ProcessGroupManager(sp_ulysses_degree, sp_ring_degree, dp_degree, use_ulysses_low, ablate_no_comm, ablate_comm)
 
 
 def get_pg_manager():
@@ -217,3 +220,9 @@ def get_data_parallel_size():
 def get_data_parallel_rank():
     """Get the rank of this process in the data parallel group the caller rank belongs to."""
     return PROCESS_GROUP_MANAGER.dp_rank
+
+def get_ablate_no_comm():
+    return PROCESS_GROUP_MANAGER.ABLATE_NO_COMM
+
+def get_ablate_comm():
+    return PROCESS_GROUP_MANAGER.ABLATE_COMM

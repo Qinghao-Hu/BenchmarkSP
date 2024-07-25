@@ -73,7 +73,7 @@ def unflatten_varlen_lse(lse, cu_seqlens, max_seqlen: int):
 
 
 class RingComm:
-    def __init__(self, process_group: dist.ProcessGroup):
+    def __init__(self, process_group: dist.ProcessGroup, ablate_no_comm):
         self._process_group = process_group
         self._ops = []
         self.rank = dist.get_rank(self._process_group)
@@ -86,6 +86,8 @@ class RingComm:
         if process_group is not None:
             self.send_rank = dist.get_global_rank(self._process_group, self.send_rank)
             self.recv_rank = dist.get_global_rank(self._process_group, self.recv_rank)
+
+        self.ablate_no_comm = ablate_no_comm
 
     def send_recv(
         self, to_send: torch.Tensor, recv_tensor: Optional[torch.Tensor] = None
@@ -104,11 +106,16 @@ class RingComm:
         return res
 
     def commit(self):
+        if self.ablate_no_comm:
+            return
         if self._reqs is not None:
             raise RuntimeError("commit called twice")
+        
         self._reqs = dist.batch_isend_irecv(self._ops)
 
     def wait(self):
+        if self.ablate_no_comm:
+            return
         if self._reqs is None:
             raise RuntimeError("wait called before commit")
         for req in self._reqs:

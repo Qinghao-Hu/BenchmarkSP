@@ -16,6 +16,8 @@ from .zigzag_ring_flash_attn import (
     zigzag_ring_flash_attn_func,
     zigzag_ring_flash_attn_kvpacked_func,
     zigzag_ring_flash_attn_qkvpacked_func,
+    set_ablate_comm,
+    set_ablate_no_comm
 )
 from .zigzag_ring_flash_attn_varlen import (
     zigzag_ring_flash_attn_varlen_func,

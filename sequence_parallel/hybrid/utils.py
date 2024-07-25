@@ -7,6 +7,10 @@ from sequence_parallel.ring import (
     stripe_flash_attn_func,
     stripe_flash_attn_qkvpacked_func,
 )
+from sequence_parallel.ring.zigzag_ring_flash_attn import (
+    set_ablate_no_comm,
+    set_ablate_comm,
+)
 
 
 class Singleton:
@@ -23,17 +27,17 @@ class ProcessGroupSingleton(Singleton):
         self.ULYSSES_PG = None
         self.RING_PG = None
 
-
 PROCESS_GROUP = ProcessGroupSingleton()
 
-
-def set_seq_parallel_pg(sp_ulysses_degree, sp_ring_degree, rank, world_size, use_ulysses_low=True):
+def set_seq_parallel_pg(sp_ulysses_degree, sp_ring_degree, rank, world_size, use_ulysses_low=True, ablate_no_comm=False, ablate_comm=False):
     """
     sp_ulysses_degree x sp_ring_degree = seq_parallel_degree
     (ulysses_degree, dp_degree)
     """
     sp_degree = sp_ring_degree * sp_ulysses_degree
     dp_degree = world_size // sp_degree
+    set_ablate_no_comm(ablate_no_comm)
+    set_ablate_comm(ablate_comm)
 
     assert world_size % sp_degree == 0, f"world_size {world_size} % sp_degree {sp_ulysses_degree} == 0"
 

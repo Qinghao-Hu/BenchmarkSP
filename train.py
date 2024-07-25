@@ -62,7 +62,7 @@ def main(args):
         sp_ring_degree = world_size // sp_ulysses_degree
 
         # TODO: Current sp_degree == world_size
-        set_seq_parallel_pg(sp_ulysses_degree, sp_ring_degree, rank, world_size, args.use_ulysses_lowdim)
+        set_seq_parallel_pg(sp_ulysses_degree, sp_ring_degree, rank, world_size, args.use_ulysses_lowdim, args.ablate_no_comm, args.ablate_comm)
         # set_pg_manager(world_size, sp_ring_degree, args.use_ulysses_lowdim)
 
     apply_seq_parallel_monkey_patch(args.parallel_mode)
@@ -177,7 +177,19 @@ def main(args):
 
             if completed_steps >= args.max_train_steps:
                 break
-
+    if args.ablate_no_comm or args.ablate_comm:
+        from sequence_parallel.ring.zigzag_ring_flash_attn import get_time_dict
+        time_dict = get_time_dict()
+        if torch.distributed.get_rank() == (torch.distributed.get_world_size() - 1):
+            # print(time_dict)
+            import numpy as np
+            forward_time = np.asarray(time_dict["forward"]) * 1000000
+            backward_time = np.asarray(time_dict["backward"]) * 1000000
+            length = int(len(forward_time) * (1/3))
+            forward_time = forward_time[length:]
+            backward_time = backward_time[length:]
+            print(f"(forward) mean: {forward_time.mean()} var: {forward_time.std()}")
+            print(f"(backward) mean: {backward_time.mean()} var: {backward_time.std()}")
     accelerator.print(f"Training Finished")
     accelerator.end_training()
 
@@ -197,6 +209,8 @@ if __name__ == "__main__":
     args.add_argument("--log-loss", type=str)
     args.add_argument("--enable_grad_ckpt", action="store_true")
     args.add_argument("--seq-length", type=int, default=2048)
+    args.add_argument("--ablate_no_comm", action="store_true")
+    args.add_argument("--ablate_comm", action="store_true")
     args.add_argument(
         "--parallel_mode",
         type=str,

@@ -1,10 +1,35 @@
 # Adopted from https://github.com/zhuzilin/ring-flash-attention.
 # Implementation refers to Ring Attention Paper: https://arxiv.org/abs/2310.01889
 
+import time
+
 import torch
 from flash_attn.flash_attn_interface import _flash_attn_forward, _flash_attn_backward
 from .utils import RingComm, update_out_and_lse
 
+ablate_no_comm = None
+ablate_comm = None
+
+def set_ablate_no_comm(_ablate_no_comm):
+    global ablate_no_comm
+    ablate_no_comm = _ablate_no_comm
+
+def set_ablate_comm(_ablate_comm):
+    global ablate_comm
+    ablate_comm = _ablate_comm
+
+def get_ablate_comm():
+    global ablate_comm
+    return ablate_comm
+
+def get_ablate_no_comm():
+    global ablate_no_comm
+    return ablate_no_comm
+
+time_dict = {"forward": [], "backward": []}
+
+def get_time_dict():
+    return time_dict
 
 def zigzag_ring_flash_attn_forward(
     process_group,
@@ -19,15 +44,14 @@ def zigzag_ring_flash_attn_forward(
     deterministic=False,
 ):
     assert causal == True, "zigzag ring is meaningless for causal=False"
-    comm = RingComm(process_group)
-
+    comm = RingComm(process_group, get_ablate_no_comm())
+    
     block_seq_len = q.shape[1] // 2
     q1 = q[:, block_seq_len:]
 
     out = None
     lse = None
     next_k, next_v = None, None
-
     def forward(q, k, v, causal):
         block_out, _, _, _, _, block_lse, _, _ = _flash_attn_forward(
             q,
@@ -54,7 +78,18 @@ def zigzag_ring_flash_attn_forward(
         elif step <= comm.rank:
             k0 = k[:, :block_seq_len]
             v0 = v[:, :block_seq_len]
+            if step == 2:
+                if get_ablate_comm() or get_ablate_no_comm():
+                    torch.cuda.synchronize()
+                    time_start = time.time()
             block_out, block_lse = forward(q, k0, v0, causal=False)
+            if step == 2:
+                if get_ablate_comm() or get_ablate_no_comm():
+                    torch.cuda.synchronize()
+                    time_end = time.time()
+                    if torch.distributed.get_rank() == torch.distributed.get_world_size() - 1:
+                        print(f"Ablate comm: {get_ablate_comm()} Ablate no comm: {get_ablate_no_comm()} backward kernel time: {time_end - time_start}")
+                        time_dict["forward"].append(time_end - time_start)
             out, lse = update_out_and_lse(out, lse, block_out, block_lse)
         else:
             block_out, block_lse = forward(q1, k, v, causal=False)
@@ -73,6 +108,7 @@ def zigzag_ring_flash_attn_forward(
 
     out = out.to(q.dtype)
     lse = lse.squeeze(dim=-1).transpose(1, 2)
+    
     return out, lse
 
 
@@ -92,8 +128,8 @@ def zigzag_ring_flash_attn_backward(
     deterministic=False,
 ):
     assert causal == True, "zigzag ring is meaningless for causal=False"
-    kv_comm = RingComm(process_group)
-    d_kv_comm = RingComm(process_group)
+    kv_comm = RingComm(process_group, get_ablate_no_comm())
+    d_kv_comm = RingComm(process_group, get_ablate_no_comm())
     dq, dk, dv = None, None, None
     next_dk, next_dv = None, None
     next_k, next_v = None, None
@@ -147,7 +183,18 @@ def zigzag_ring_flash_attn_backward(
             if step <= kv_comm.rank:
                 k0 = k[:, :block_seq_len]
                 v0 = v[:, :block_seq_len]
+                if step == 2:
+                    if get_ablate_comm() or get_ablate_no_comm():
+                        torch.cuda.synchronize()
+                        time_start = time.time()
                 backward(dout, q, k0, v0, out, softmax_lse, causal=False)
+                if step == 2:
+                    if get_ablate_comm() or get_ablate_no_comm():
+                        torch.cuda.synchronize()
+                        time_end = time.time()
+                        if torch.distributed.get_rank() == torch.distributed.get_world_size() - 1:
+                            print(f"Ablate comm: {get_ablate_comm()} Ablate no comm: {get_ablate_no_comm()} backward kernel time: {time_end - time_start}")
+                            time_dict["backward"].append(time_end - time_start)
                 dq += dq_buffer
             else:
                 backward(dout1, q1, k, v, out1, softmax_lse1, causal=False)
@@ -175,7 +222,6 @@ def zigzag_ring_flash_attn_backward(
         d_kv_comm.commit()
 
     d_kv_comm.wait()
-
     return dq.to(q.dtype), next_dk.to(q.dtype), next_dv.to(q.dtype)
 
 
