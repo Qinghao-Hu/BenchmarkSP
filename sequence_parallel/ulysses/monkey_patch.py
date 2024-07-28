@@ -28,6 +28,7 @@ def new_flash_attn_forward(
     assert attention_mask is None
     assert causal is True
     assert use_sliding_windows is False
+    print(f"In ulysses: {query_states.shape}")
     attn_output = ulysses_attn(
         query_states,
         key_states,

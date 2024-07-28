@@ -66,6 +66,7 @@ class HybridAttention(torch.nn.Module):
 
         # 3 X (bs, seq_len/N, head_cnt, head_size) -> 3 X (bs, seq_len, head_cnt/N, head_size)
         # scatter 2, gather 1
+        # print(f"In hybfic attn: {query.shape}")
         if self.use_pack_qkv:
             # (3*bs, seq_len/N, head_cnt, head_size)
             qkv = torch.cat([query, key, value]).continous()

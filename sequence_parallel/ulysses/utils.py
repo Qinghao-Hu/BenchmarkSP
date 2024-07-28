@@ -94,7 +94,6 @@ class SeqAllToAll4D(torch.autograd.Function):
         scatter_idx: int,
         gather_idx: int,
     ) -> Tensor:
-
         ctx.group = group
         ctx.scatter_idx = scatter_idx
         ctx.gather_idx = gather_idx

@@ -88,13 +88,33 @@ def main(args):
         batch_size=args.batch_size,
     )
 
-    optim = DummyOptim(model.parameters(), lr=args.learning_rate)
-    scheduler = DummyScheduler(
-        optim,
+    # optim = DummyOptim(model.parameters(), lr=args.learning_rate)
+    # scheduler = DummyScheduler(
+    #     optim,
+    #     num_training_steps=args.max_train_steps,
+    #     total_num_steps=args.max_train_steps,
+    #     num_warmup_steps=args.warmup_steps,
+    # )
+    no_decay = ["bias", "LayerNorm.weight"]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
+        },
+    ]
+    optim = torch.optim.AdamW(optimizer_grouped_parameters, lr=0.001)   
+    from transformers import get_scheduler
+    scheduler = get_scheduler(
+        name="linear",
+        optimizer=optim,
+        num_warmup_steps=0,
         num_training_steps=args.max_train_steps,
-        total_num_steps=args.max_train_steps,
-        num_warmup_steps=args.warmup_steps,
-    )
+        )
+
     model, optim, scheduler = accelerator.prepare(model, optim, scheduler)
     train_loader = prepare_dataloader(args.parallel_mode, train_loader, accelerator)
     if args.enable_grad_ckpt:
@@ -127,9 +147,13 @@ def main(args):
     # ) as profiler:
 
     print(f"Using {args.parallel_mode}")
+    input_ids = torch.ones(args.batch_size,args.seq_length, dtype=torch.int64)
+    target_ids = torch.ones(args.batch_size,args.seq_length, dtype=torch.int64)
     for step, batch in enumerate(train_loader):
-        input_ids = batch["input_ids"][..., : args.seq_length + 1][..., :-1]
-        target_ids = batch["input_ids"][..., : args.seq_length + 1][..., 1:]
+        # input_ids = batch["input_ids"][..., : args.seq_length + 1][..., :-1]
+        # print(f"In train.py {input_ids.shape}")
+        # target_ids = batch["input_ids"][..., : args.seq_length + 1][..., 1:]
+        # print(f"In train.py {target_ids.shape} {target_ids.dtype}")
         position_ids = torch.arange(args.seq_length).unsqueeze(0).expand(input_ids.shape[0], -1)
         # shard the input_ids according to the world size and rank according to zig zag attention
 
@@ -149,10 +173,13 @@ def main(args):
         accelerator.print(f"Step: {step}")
         loss_log = None
         with accelerator.accumulate(model):
+            print(f"{input_ids.shape} in train.py")
             logits = model(
                 local_input_ids,
                 position_ids=local_position_ids,
             ).logits
+            # print(f"In train {model}")
+            print(f"{logits.shape} in train.py")
             loss = loss_func(logits.reshape(-1, logits.shape[-1]), local_target_ids.reshape(-1))
             accelerator.backward(loss)
 

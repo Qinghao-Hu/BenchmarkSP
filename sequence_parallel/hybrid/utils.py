@@ -38,7 +38,8 @@ def set_seq_parallel_pg(sp_ulysses_degree, sp_ring_degree, rank, world_size, use
     dp_degree = world_size // sp_degree
     set_ablate_no_comm(ablate_no_comm)
     set_ablate_comm(ablate_comm)
-
+    
+    # print(f"Setting pg group in hybrid/utils.py: sp_ring_degree {sp_ring_degree} sp_ulysses_degree: {sp_ulysses_degree}")
     assert world_size % sp_degree == 0, f"world_size {world_size} % sp_degree {sp_ulysses_degree} == 0"
 
     num_ulysses_pgs = sp_ring_degree  # world_size // sp_ulysses_degree

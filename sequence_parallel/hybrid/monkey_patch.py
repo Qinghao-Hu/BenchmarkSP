@@ -31,7 +31,6 @@ def new_flash_attn_forward(
     assert use_sliding_windows is False
 
     hybrid_attn = HybridAttention(ring_impl_type="zigzag")
-
     attn_output = hybrid_attn(
         query_states,
         key_states,

@@ -45,7 +45,7 @@ def zigzag_ring_flash_attn_forward(
 ):
     assert causal == True, "zigzag ring is meaningless for causal=False"
     comm = RingComm(process_group, get_ablate_no_comm())
-    
+    # print(f"In zigzag: {q.shape}")    
     block_seq_len = q.shape[1] // 2
     q1 = q[:, block_seq_len:]
 
