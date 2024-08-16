@@ -139,11 +139,15 @@ srun -p xxx --job-name=megatron -n 1 --gres=gpu:8 --ntasks-per-node=1 bash srun.
 You can customize `SEQ_LENGTH_PER_GPU`, `context-parallel-size` and other parameters in `srun.sh`.
 
 
-
-
 > [!Note]
 >  💡**Sequence Parallelism Configuration**
+>
 > To enable sequence parallelism, you can set the following parameters in the training script:
+>
 > `seq_parallel_size`:The degree of sequence parallelism (SP). SP is disabled by default (value: -1).
+>
 > `seq_parallel_ring_size`: The communication process group size using optimized Ring Attention approach in SP, where `seq_parallel_size` = `seq_parallel_ring_size` x `seq_parallel_ulysses_size` (determined by other two terms). Ring Attention approach is disabled by default in SP. This setting is adjustable only when `seq_parallel_size` > 1.
+>
 > `seq_parallel_ring_type`: Ring Attention implementation. Support ['ring_varlen', 'zigzag_ring_varlen'] in 2D attention. Only works when `seq_parallel_ring_size` > 1.
+>
+> Note that the `seq_parallel_size` should be a multiple of the number of GPUs used in training. For example, if you are using 8 GPUs, you can set `seq_parallel_size` to 8, 16, 32, etc.
